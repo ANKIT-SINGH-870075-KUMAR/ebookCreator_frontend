@@ -10,7 +10,8 @@ const Navbar = () => {
 
   const navLinks = [
     { name: "Features", href: "#features" },
-    { name: "Testimonials", href: "#testimonials" },
+    { name: "About", href: "/about" },
+    { name: "Contact", href: "/contact" },
   ];
 
   // Close dropdowns when clicking outside
@@ -26,7 +27,7 @@ setProfileDropdownOpen(false);
   }, [profileDropdownOpen]);
 
   return (
-<header>
+<header className="relative z-50">
   <div className="max-w-7xl mx-auto px-6 lg:px-8">
     <div className="flex items-center justify-between h-16">
       {/* Logo */}

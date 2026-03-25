@@ -1,7 +1,7 @@
 import { ArrowRight, Sparkles, BookOpen, Zap } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
-import HERO_IMG from "../../assets/react.svg";
+import HERO_IMG from "../../assets/banner.png";
 
 const Hero = () => {
 

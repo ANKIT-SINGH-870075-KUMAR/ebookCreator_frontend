@@ -63,13 +63,13 @@ const Footer = () => {
                         <h3 className='text-sm font-semibold text-white mb-4'>Company</h3>
                         <ul className='space-y-3'>
                             <li>
-                                <a href="#about" className='text-gray-400 hover:text-violet-400 transition-colors duration-200 text-sm'>About</a>
+                                <a href="/about" className='text-gray-400 hover:text-violet-400 transition-colors duration-200 text-sm'>About</a>
                             </li>
                             <li>
-                                <a href="#contact" className='text-gray-400 hover:text-violet-400 transition-colors duration-200 text-sm'>Contact</a>
+                                <a href="/contact" className='text-gray-400 hover:text-violet-400 transition-colors duration-200 text-sm'>Contact</a>
                             </li>
                             <li>
-                                <a href="#blog" className='text-gray-400 hover:text-violet-400 transition-colors duration-200 text-sm'>Blog</a>
+                                <a href="/faq" className='text-gray-400 hover:text-violet-400 transition-colors duration-200 text-sm'>FAQ</a>
                             </li>
                         </ul>
                     </div>
@@ -78,10 +78,13 @@ const Footer = () => {
                         <h3 className='text-sm font-semibold text-white mb-4'>Legal</h3>
                         <ul className='space-y-3'>
                              <li>
-                                <a href="#privacy" className='text-gray-400 hover:text-violet-400 transition-colors duration-200 text-sm'>Privacy</a>
+                                <a href="/privacy" className='text-gray-400 hover:text-violet-400 transition-colors duration-200 text-sm'>Privacy Policy</a>
                             </li>
                              <li>
-                                <a href="#terms" className='text-gray-400 hover:text-violet-400 transition-colors duration-200 text-sm'>Terms</a>
+                                <a href="/terms" className='text-gray-400 hover:text-violet-400 transition-colors duration-200 text-sm'>Terms of Service</a>
+                            </li>
+                             <li>
+                                <a href="/refund" className='text-gray-400 hover:text-violet-400 transition-colors duration-200 text-sm'>Refund Policy</a>
                             </li>
                         </ul>
                     </div>

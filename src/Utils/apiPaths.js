@@ -21,6 +21,10 @@ export const API_PATHS = {
         PDF: "/api/export",
         DOC: "/api/export",
     },
+    CONTACT: {
+        SUBMIT: "/api/contact",
+    },
 };
 
 export const BASE_URL ="https://ebookcreatorbackend.onrender.com" 
+// export const BASE_URL ="http://localhost:8000" 
