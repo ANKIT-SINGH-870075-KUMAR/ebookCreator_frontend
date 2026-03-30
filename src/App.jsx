@@ -14,6 +14,7 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsAndConditionsPage from './pages/TermsAndConditionsPage';
 import RefundPolicyPage from './pages/RefundPolicyPage';
 import ContactUsPage from './pages/ContactUsPage';
+import FAQPage from './pages/FAQPage';
 
 const App = () => {
   useEffect(() => {
@@ -35,6 +36,7 @@ const App = () => {
         <Route path="/terms" element={<TermsAndConditionsPage />} />
         <Route path="/refund" element={<RefundPolicyPage />} />
         <Route path="/contact" element={<ContactUsPage />} />
+        <Route path="/faq" element={<FAQPage />} />
 
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
