@@ -26,5 +26,5 @@ export const API_PATHS = {
     },
 };
 
-export const BASE_URL ="https://ebookcreatorbackend.onrender.com" 
-// export const BASE_URL ="http://localhost:8000" 
+// export const BASE_URL ="https://ebookcreatorbackend.onrender.com" 
+export const BASE_URL ="http://localhost:8000" 

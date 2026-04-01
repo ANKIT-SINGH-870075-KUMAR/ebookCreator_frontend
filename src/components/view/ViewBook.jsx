@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { ChevronLeft, Menu } from "lucide-react";
+import { ChevronLeft, Menu, Volume2 } from "lucide-react";
 import ViewChapterSidebar from "./ViewChapterSidebar";
+import TextToSpeech from "../ui/TextToSpeech";
 
 const ViewBook = ({book}) => {
 
     const [selectedChapterIndex, setSelectedChapterIndex] = useState(0);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [fontSize, setFontSize] = useState(18);
+    const [showTTS, setShowTTS] = useState(false);
     const selectedChapter = book.chapters[selectedChapterIndex];
 
     // Format content with proper paragraphs and styling 
@@ -61,8 +63,30 @@ const ViewBook = ({book}) => {
                   A+
                  </button>
               </div>
+              
+              {/* TTS Toggle Button */}
+              <button
+                onClick={() => setShowTTS(!showTTS)}
+                className={`p-2 rounded-lg transition-colors ${showTTS ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-gray-100 text-gray-600'}`}
+                title="Text-to-Speech"
+              >
+                <Volume2 className="w-5 h-5" />
+              </button>
             </div>
           </header>
+
+          {/* Text-to-Speech Panel - Top of Page */}
+          {showTTS && (
+            <div className="border-b border-gray-200 bg-gray-50">
+              <div className="max-w-4xl mx-auto px-6 py-4">
+                <TextToSpeech
+                  text={selectedChapter.content}
+                  bookTitle={book.title}
+                  chapterTitle={selectedChapter.title}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Reading Area */}
           <div className="flex-1 overflow-y-auto">
@@ -104,6 +128,8 @@ const ViewBook = ({book}) => {
                   <ChevronLeft className="w-4 h-4 rotate-180" />
                 </button>
               </div>
+
+
             </div>
           </div>
         </main>
