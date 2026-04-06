@@ -16,6 +16,13 @@ import TermsAndConditionsPage from './pages/TermsAndConditionsPage';
 import RefundPolicyPage from './pages/RefundPolicyPage';
 import ContactUsPage from './pages/ContactUsPage';
 import FAQPage from './pages/FAQPage';
+import SupportPage from './pages/SupportPage';
+import TicketDetailPage from './pages/TicketDetailPage';
+import BrowseBooksPage from './pages/BrowseBooksPage';
+import AdminPage from './pages/AdminPage';
+import WritersPage from './pages/WritersPage';
+import InboxPage from './pages/InboxPage';
+import WriterProfilePage from './pages/WriterProfilePage';
 
 const App = () => {
   useEffect(() => {
@@ -40,10 +47,19 @@ const App = () => {
         <Route path="/faq" element={<FAQPage />} />
 
         {/* Protected Routes */}
-        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/editor/:bookId" element={<ProtectedRoute><EditorPage /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['writer'/*  */]}><DashboardPage /></ProtectedRoute>} />
+        <Route path="/writer/:writerId" element={<ProtectedRoute allowedRoles={['superadmin']}><DashboardPage /></ProtectedRoute>} />
+        <Route path="/browse" element={<ProtectedRoute allowedRoles={['viewer', 'writer', 'superadmin']}><BrowseBooksPage /></ProtectedRoute>} />
+        <Route path="/writers" element={<ProtectedRoute allowedRoles={['viewer']}><WritersPage /></ProtectedRoute>} />
+        <Route path="/writer-profile/:writerId" element={<ProtectedRoute allowedRoles={['viewer']}><WriterProfilePage /></ProtectedRoute>} />
+        <Route path="/inbox" element={<ProtectedRoute allowedRoles={['viewer', 'writer']}><InboxPage /></ProtectedRoute>} />
+        <Route path="/editor/:bookId" element={<ProtectedRoute allowedRoles={['writer', 'superadmin']}><EditorPage /></ProtectedRoute>} />
         <Route path="/view-book/:bookId" element={<ProtectedRoute><ViewBookPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/support" element={<ProtectedRoute allowedRoles={['viewer', 'writer']}><SupportPage /></ProtectedRoute>} />
+        <Route path="/support/:ticketId" element={<ProtectedRoute allowedRoles={['viewer', 'writer']}><TicketDetailPage /></ProtectedRoute>} />
+        <Route path="/admin/tickets/:ticketId" element={<ProtectedRoute allowedRoles={['superadmin']}><TicketDetailPage /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminPage /></ProtectedRoute>} />
       </Routes>
     </div>
   )

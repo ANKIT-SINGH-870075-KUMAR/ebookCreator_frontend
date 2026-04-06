@@ -13,11 +13,13 @@ import SelectField from "../components/ui/SelectField";
 import ChapterSidebar from "../components/editor/ChapterSidebar";
 import ChapterEditorTab from "../components/editor/ChapterEditorTab";
 import BookDetailsTab from "../components/editor/BookDetailsTab";
+import { useAuth } from "../context/AuthContext";
 
 const EditorPage = () => {
 
    const { bookId } = useParams();
    const navigate = useNavigate();
+   const { user } = useAuth();
    const [book, setBook] = useState(null);
    const [isLoading, setIsLoading] = useState(true);
    const [isSaving, setIsSaving] = useState(false);
@@ -25,7 +27,10 @@ const EditorPage = () => {
    const [selectedChapterIndex, setSelectedChapterIndex] = useState(0);
    const [activeTab, setActiveTab] = useState("editor");
    const fileInputRef = useRef(null);
-   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // AI Cover Generation
+  const [isGeneratingCover, setIsGeneratingCover] = useState(false);
 
   //  AI Modal State
   const [isOutlineModalOpen, setIsOutlineModalOpen] = useState(false);
@@ -128,6 +133,37 @@ const EditorPage = () => {
       }
   };
 
+  const handleGenerateCover = async () => {
+      if(!book.title || !book.author){
+        toast.error("Please add a book title and author first.");
+        return;
+      }
+      setIsGeneratingCover(true);
+      try {
+        const response = await axiosInstance.post(API_PATHS.AI.GENERATE_BOOK_COVER, {
+          bookTitle: book.title,
+          author: book.author,
+          booktheme: book.genre || "general",
+          elements: "abstract geometric shapes representing creativity",
+          mood: "inspiring and professional",
+          emotion: "creativity and success",
+          colortheme1: "deep purple",
+          colortheme2: "gold",
+          style: "modern minimal",
+          typography: "elegant serif"
+        });
+        
+        setBook({...book, coverImage: response.data.image});
+        toast.success("Cover image generated!");
+        await handleSaveChanges({...book, coverImage: response.data.image}, false);
+      } catch (error) {
+        console.error("Error generating cover:", error);
+        toast.error("Failed to generate cover image.");
+      } finally {
+        setIsGeneratingCover(false);
+      }
+  };
+
   // const handleGenerateOutline = async () => {
 
   // };
@@ -159,6 +195,28 @@ const EditorPage = () => {
        } finally {
         setIsGenerating(false);
        }
+  };
+
+  const handleAddComment = (chapterIndex, comment) => {
+    const updatedChapters = [...book.chapters];
+    if (!updatedChapters[chapterIndex].comments) {
+      updatedChapters[chapterIndex].comments = [];
+    }
+    updatedChapters[chapterIndex].comments.push({
+      ...comment,
+      userId: user?._id,
+      userName: user?.name || "User",
+      createdAt: new Date()
+    });
+    setBook({ ...book, chapters: updatedChapters });
+    handleSaveChanges({ ...book, chapters: updatedChapters }, true);
+  };
+
+  const handleDeleteComment = (chapterIndex, commentIndex) => {
+    const updatedChapters = [...book.chapters];
+    updatedChapters[chapterIndex].comments.splice(commentIndex, 1);
+    setBook({ ...book, chapters: updatedChapters });
+    handleSaveChanges({ ...book, chapters: updatedChapters }, true);
   };
 
   const handleExportPDF = async () => {
@@ -325,12 +383,16 @@ const EditorPage = () => {
              onChapterChange={handleChapterChange}
              onGenerateChapterContent={handleGenerateChapterContent}
              isGenerating={isGenerating}
+             onAddComment={(comment) => handleAddComment(selectedChapterIndex, comment)}
+             onDeleteComment={(index) => handleDeleteComment(selectedChapterIndex, index)}
              />
           ) : (
 <BookDetailsTab
     book={book}
     onBookChange={handleBookChange}
     onCoverUpload={handleCoverImageUpload}
+    onGenerateCover={handleGenerateCover}
+    isGeneratingCover={isGeneratingCover}
     isUploading={isUploading}
     fileInputRef={fileInputRef}
     />

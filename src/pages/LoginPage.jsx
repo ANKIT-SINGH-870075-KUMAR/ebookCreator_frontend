@@ -27,16 +27,20 @@ const LoginPage = () => {
     setIsLoading(true);
     try {
       const response = await axiosInstance.post(API_PATHS.AUTH.LOGIN, formData);
-      const { token } = response.data;
-
-      // Fetch profile to get user details
-      const profileResponse = await axiosInstance.get(API_PATHS.AUTH.GET_PROFILE, {
-        headers: {Authorization: `Bearer ${token}`},
-      });
-
-      login(profileResponse.data, token);
+      const userData = response.data;
+      login(userData, userData.token);
       toast.success("Login succcessful!");
-      navigate("/dashboard");
+      
+      const userRole = (userData.role || '').toLowerCase().trim();
+      let redirectPath = '/writers';
+      if (userRole === 'superadmin') {
+        redirectPath = '/admin';
+      } else if (userRole === 'writer') {
+        redirectPath = '/dashboard';
+      } else if (userRole === 'viewer') {
+        redirectPath = '/writers';
+      }
+      navigate(redirectPath);
       
     } catch (error) {
       localStorage.clear()

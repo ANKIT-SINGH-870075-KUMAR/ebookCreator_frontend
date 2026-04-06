@@ -1,24 +1,26 @@
-import { use, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Plus, Book } from "lucide-react";
+import { Plus, Book, ArrowLeft } from "lucide-react";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import Button from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
 import axiosInstance from "../utils/axiosInstance";
-import { API_PATHS } from "../utils/apiPaths";
+import { API_PATHS, BASE_URL } from "../utils/apiPaths";
 import BookCard from "../components/cards/BookCard";
 import CreateBookModal from "../components/modals/CreateBookModal";
 
 // Skeleton Loader for Book Card
 const BookCardSkeleton = () => {
-  <div className="animate-pulse bg-white border border-slate-200 rounded-lg shadow-sm">
-    <div className="w-full aspect-[16/25] bg-slate-200 rounded-t-lg"></div>
-    <div className="p-4">
-      <div className="h-6 bg-slate-200 rounded w-3/4 mb-2"></div>
-      <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+  return (
+    <div className="animate-pulse bg-white border border-slate-200 rounded-lg shadow-sm">
+      <div className="w-full aspect-[16/25] bg-slate-200 rounded-t-lg"></div>
+      <div className="p-4">
+        <div className="h-6 bg-slate-200 rounded w-3/4 mb-2"></div>
+        <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+      </div>
     </div>
-  </div>
+  );
 };
 
 const ConfirmationModal  = ({ isOpen, onClose, onConfirm, title, message }) =>{
@@ -52,14 +54,31 @@ const DashboardPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [bookToDelete, setBookToDelete] = useState(null);
+  const [writerData, setWriterData] = useState(null);
+  const [transferRequests, setTransferRequests] = useState([]);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { writerId } = useParams();
 
   useEffect(() => {
-    const fetchBooks = async () =>{
+    const fetchData = async () =>{
       try {
-        const response = await axiosInstance.get(API_PATHS.BOOKS.GET_BOOKS);
-        setBooks(response.data);
+        if (writerId) {
+          const [booksRes, userRes] = await Promise.all([
+            axiosInstance.get(`${API_PATHS.BOOKS.GET_BOOKS_BY_USER}/${writerId}`),
+            axiosInstance.get(`${API_PATHS.USERS.GET_USER}/${writerId}`)
+          ]);
+          setBooks(booksRes.data);
+          setWriterData(userRes.data);
+        } else {
+          const response = await axiosInstance.get(API_PATHS.BOOKS.GET_BOOKS);
+          setBooks(response.data);
+        }
+        
+        if (user?.role === 'writer') {
+          const transferRes = await axiosInstance.get(API_PATHS.TRANSFER.GET_MY);
+          setTransferRequests(transferRes.data.filter(r => r.status === 'pending'));
+        }
       } catch (error) {
         toast.error("Failed to fetch your eBooks.");
       } finally{
@@ -67,8 +86,8 @@ const DashboardPage = () => {
       }
     };
 
-    fetchBooks();
-  },[]);
+    fetchData();
+  },[writerId, user?.role]);
 
   const handleDeleteBook = async() =>{
      if(!bookToDelete) return;
@@ -94,23 +113,84 @@ setIsCreateModalOpen(false);
 navigate(`/editor/${bookId}`);
   };
 
+  const handleTransferResponse = async (requestId, action) => {
+    try {
+      const response = await axiosInstance.put(`${API_PATHS.TRANSFER.RESPOND}/${requestId}/respond`, { action });
+      toast.success(action === 'accepted' ? "Transfer accepted!" : "Transfer rejected");
+      setTransferRequests(transferRequests.filter(r => r._id !== requestId));
+    } catch (error) {
+      console.log("Error:", error.response?.data);
+      toast.error(error.response?.data?.message || "Failed to respond to transfer request.");
+    }
+  };
+
 
 
   return (
-    <DashboardLayout>
+    <DashboardLayout showWriterView={!!writerId} writerName={writerData?.name} writerEmail={writerData?.email}>
       <div className="container mx-auto p-6">
+        {/* Transfer Requests Banner for Writers */}
+        {user?.role === 'writer' && transferRequests.length > 0 && (
+          <div className="mb-6 bg-violet-50 border border-violet-200 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-violet-900 mb-3">Transfer Requests</h3>
+            {transferRequests.map((request) => {
+              const coverImageUrl = request.bookId?.coverImage ? `${BASE_URL}/backend${request.bookId.coverImage}`.replace(/\\/g, "/") : "";
+              return (
+                <div key={request._id} className="flex items-center justify-between bg-white rounded-lg p-3 mb-2">
+                  <div className="flex items-center gap-3">
+                    {coverImageUrl ? (
+                      <img src={coverImageUrl} alt="" className="w-10 h-14 object-cover rounded" onError={(e) => { e.target.style.display = 'none'; }} />
+                    ) : (
+                      <div className="w-10 h-14 bg-violet-200 rounded flex items-center justify-center">
+                        <Book className="w-5 h-5 text-violet-500" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{request.bookId?.title || 'Unknown Book'}</p>
+                      <p className="text-xs text-gray-500">From: {request.fromUserId?.name || 'Admin'}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleTransferResponse(request._id, 'accepted')}
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => handleTransferResponse(request._id, 'rejected')}
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-lg font-bold text-slate-900">All eBooks</h1>
-            <p className="text-[13px] text-slate-600 mt-1">Create, edit, and manage all your AI-generated eBooks.</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-bold text-slate-900">
+                {writerId && writerData ? `${writerData.name}'s eBooks` : "All eBooks"}
+              </h1>
+            </div>
+            <p className="text-[13px] text-slate-600 mt-1">
+              {(user?.role === 'writer' || user?.role === 'superadmin')
+                ? "Create, edit, and manage all your AI-generated eBooks."
+                : "Browse and read all available eBooks."}
+            </p>
           </div>
-          <Button
-          className="whitespace-nowrap"
-          onClick={handleCreateBookClick}
-          icon={Plus}
-          >
-            Create New eBook
-          </Button>
+          {!writerId && (user?.role === 'writer' || user?.role === 'superadmin') && (
+            <Button
+            className="whitespace-nowrap"
+            onClick={handleCreateBookClick}
+            icon={Plus}
+            >
+              Create New eBook
+            </Button>
+          )}
         </div>
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3xl xl:grid-cols-4 gap-6">
@@ -127,11 +207,15 @@ navigate(`/editor/${bookId}`);
               No eBooks found.
             </h3>
             <p className="text-slate-500 mb-6 max-w-md">
-              You haven't created any eBooks yet. Get started by creating your first one.
+              {(user?.role === 'writer' || user?.role === 'superadmin')
+                ? "You haven't created any eBooks yet. Get started by creating your first one."
+                : "No eBooks are available yet. Check back later."}
             </p>
-            <Button onClick={handleCreateBookClick} icon={Plus}>
-              Create Your First eBook
-            </Button>
+            {(user?.role === 'writer' || user?.role === 'superadmin') && (
+              <Button onClick={handleCreateBookClick} icon={Plus}>
+                Create Your First eBook
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -140,7 +224,7 @@ navigate(`/editor/${bookId}`);
               <BookCard
                 key={book._id}
                 book={book}
-                onDelete = {() => setBookToDelete(book._id)}
+                onDelete = {(user?.role === 'writer' || user?.role === 'superadmin') ? () => setBookToDelete(book._id) : undefined}
                 />
             ))}
           </div>

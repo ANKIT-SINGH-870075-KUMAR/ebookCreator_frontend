@@ -3,6 +3,7 @@ import { Sparkles, Type, Eye, Maximize2 } from "lucide-react";
 import Button from "../ui/Button";
 import InputField from "../ui/InputField";
 import SimpleMDEditor from "./SimpleMDEditor";
+import Cheatsheet from "./Cheatsheet";
 
 const ChapterEditorTab = ({
     book ={
@@ -17,11 +18,15 @@ const ChapterEditorTab = ({
     selectedChapterIndex = 0,
     onChapterChange = ()=>{},
     onGenerateChapterContent = ()=>{},
-    isGenerating
+    isGenerating,
+    onAddComment,
+    onDeleteComment
 }) => {
-   
+    
     const [isPreviewMode, setIsPreviewMode] = useState(false);
     const [isFullscreen,  setIsFullscreen] = useState(false);
+    const [selectedText, setSelectedText] = useState("");
+    const [selectionInfo, setSelectionInfo] = useState(null);
 
     // Simple markdown parser
     const formatMarkdown = (content) => {
@@ -113,14 +118,22 @@ const ChapterEditorTab = ({
                             <Maximize2 className="w-4 h-4" />
                           </button>
 
-                          <Button
+                            <Button
                             onClick={()=> onGenerateChapterContent(selectedChapterIndex)}
                             isLoading={isGenerating === selectedChapterIndex}
                             icon={Sparkles}
                             size="sm">
                                 Generate With AI
                             </Button>
-                    </div>
+
+                            <Cheatsheet
+                                chapter={currentChapter}
+                                onAddComment={onAddComment}
+                                onDeleteComment={onDeleteComment}
+                                selectedText={selectedText}
+                                selectionInfo={selectionInfo}
+                            />
+                        </div>
                 </div>
             </div>
         </div>
@@ -177,6 +190,10 @@ const ChapterEditorTab = ({
                                         )
                                        }
                                        options={mdeOptions}
+                                       onTextSelect={(text, info) => {
+                                         setSelectedText(text);
+                                         setSelectionInfo(info);
+                                       }}
                                        />
                                 </div>
                             )}

@@ -5,7 +5,23 @@ import HERO_IMG from "../../assets/banner.png";
 
 const Hero = () => {
 
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
+    const isSuperAdmin = user?.role === 'superadmin';
+    const isViewer = user?.role === 'viewer';
+
+    const getButtonText = () => {
+        if (!isAuthenticated) return "Start Creating for Free";
+        if (isSuperAdmin) return "Go to Admin Panel";
+        if (isViewer) return "See all books";
+        return "Go to Dashboard";
+    };
+
+    const getButtonLink = () => {
+        if (!isAuthenticated) return "/login";
+        if (isSuperAdmin) return "/admin";
+        if (isViewer) return "/browse";
+        return "/dashboard";
+    };
 
   return (
 <div className="relative bg-gradient-to-br from-violet-50 via-white to-purple-50 overflow-hidden">
@@ -36,10 +52,10 @@ const Hero = () => {
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     <Link
-                    to={isAuthenticated ? "/dashboard" : "/login"}
+                    to={getButtonLink()}
                     className="group inline-flex items-center space-x-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-105 transition-all duration-200"
                     >
-                        <span>Start Creating for Free</span>
+                        <span>{getButtonText()}</span>
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
 

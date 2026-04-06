@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, User, BookOpen } from "lucide-react";
+import { Mail, Lock, User, BookOpen, Eye, PenTool } from "lucide-react";
 import toast from "react-hot-toast";
 import InputField from "../components/ui/InputField";
 import Button from "../components/ui/Button";
@@ -9,7 +9,7 @@ import axiosInstance from "../utils/axiosInstance";
 import { API_PATHS } from "../utils/apiPaths";
 
 const SignupPage = () => {
-  const [formData, setFormData] = useState({name: "", email: "", password: ""});
+  const [formData, setFormData] = useState({name: "", email: "", password: "", role: "viewer"});
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -31,7 +31,13 @@ const SignupPage = () => {
 
       login(profileResponse.data, token);
       toast.success("Account created successfully!");
-      navigate("/dashboard");
+      
+      // Redirect based on role
+      if (profileResponse.data.role === 'writer' || profileResponse.data.role === 'superadmin') {
+        navigate("/dashboard");
+      } else {
+        navigate("/writers");
+      }
       
     } catch (error) {
       toast.error(error.response?.data?.message || "Signup failed. Please try again.");
@@ -82,6 +88,45 @@ const SignupPage = () => {
           value={formData.password}
           onChange={handleChange}
           required/>
+
+          {/* Role Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Select Your Role
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({...formData, role: "viewer"})}
+                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                  formData.role === "viewer"
+                    ? "border-violet-500 bg-violet-50"
+                    : "border-gray-200 hover:border-violet-300"
+                }`}
+              >
+                <Eye className={`w-6 h-6 ${formData.role === "viewer" ? "text-violet-600" : "text-gray-500"}`} />
+                <div className="text-center">
+                  <p className={`text-sm font-medium ${formData.role === "viewer" ? "text-violet-900" : "text-gray-900"}`}>Viewer</p>
+                  <p className="text-xs text-gray-500 mt-1">Browse and read eBooks</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({...formData, role: "writer"})}
+                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                  formData.role === "writer"
+                    ? "border-violet-500 bg-violet-50"
+                    : "border-gray-200 hover:border-violet-300"
+                }`}
+              >
+                <PenTool className={`w-6 h-6 ${formData.role === "writer" ? "text-violet-600" : "text-gray-500"}`} />
+                <div className="text-center">
+                  <p className={`text-sm font-medium ${formData.role === "writer" ? "text-violet-900" : "text-gray-900"}`}>Writer</p>
+                  <p className="text-xs text-gray-500 mt-1">Create and manage eBooks</p>
+                </div>
+              </button>
+            </div>
+          </div>
 
           <Button type="submit" isLoading={isLoading} className="w-full">
             Create Account

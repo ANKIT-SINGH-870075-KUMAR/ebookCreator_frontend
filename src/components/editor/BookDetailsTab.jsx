@@ -1,6 +1,6 @@
 import InputField from "../ui/InputField";
 import Button from "../ui/Button";
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, Sparkles } from "lucide-react";
 import { BASE_URL } from "../../utils/apiPaths";
 
 const BookDetailsTab = ({
@@ -8,7 +8,9 @@ const BookDetailsTab = ({
     onBookChange,
     onCoverUpload,
     isUploading,
-    fileInputRef
+    fileInputRef,
+    onGenerateCover,
+    isGeneratingCover
 }) => {
     const coverImageUrl = book.coverImage.startsWith('http') ? book.coverImage : `${BASE_URL}/backend${book.coverImage}`.replace(/\\/g,  '/');
 
@@ -29,11 +31,22 @@ const BookDetailsTab = ({
         <div className="flex items-start gap-6">
           <img src={coverImageUrl} alt="Cover" className="w-32 h-48 object-cover rounded-lg bg-slate-100 shadow" />
           <div>
-            <p className="text-sm text-slate-600 mb-4">Upload a new cover image. Recommended size: 600x800px.</p>
-            <input type="file" ref={fileInputRef} onChange={onCoverUpload} className="hidden" accept="image/*" />
-            <Button variant="secondary" onClick={()=> fileInputRef.current.click()} isLoading={isUploading} icon={UploadCloud}>
-              Upload Image
-            </Button>
+            <p className="text-sm text-slate-600 mb-4">Upload a new cover image or generate one with AI. Recommended size: 600x800px.</p>
+            <div className="flex gap-3">
+              <input type="file" ref={fileInputRef} onChange={onCoverUpload} className="hidden" accept="image/*" />
+              <Button variant="secondary" onClick={()=> fileInputRef.current.click()} isLoading={isUploading} icon={UploadCloud}>
+                Upload Image
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={onGenerateCover} 
+                isLoading={isGeneratingCover} 
+                icon={Sparkles}
+                className="bg-gradient-to-r from-violet-600 to-purple-600 text-white border-0 hover:from-violet-700 hover:to-purple-700"
+              >
+                Generate with AI
+              </Button>
+            </div>
           </div>
         </div>
       </div>

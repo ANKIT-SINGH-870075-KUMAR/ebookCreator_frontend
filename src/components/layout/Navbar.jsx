@@ -1,14 +1,30 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import ProfileDropdown from "./ProfileDropDown";
-import {Menu, X, BookOpen, LogOut } from "lucide-react";
+import {Menu, X, BookOpen, LogOut, Settings, Mail } from "lucide-react";
 
 const Navbar = () => {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, isSuperAdmin, isViewer, isWriter } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const canAccessSupport = !isSuperAdmin;
 
-  const navLinks = [
+  const navLinks = isViewer ? [
+    { name: "Features", href: "#features" },
+    { name: "Writers", href: "/writers" },
+    { name: "Browse", href: "/browse" },
+    { name: "Inbox", href: "/inbox" },
+    { name: "FAQ", href: "/faq" },
+    { name: "About", href: "/about" },
+    { name: "Contact", href: "/contact" },
+  ] : canAccessSupport ? [
+    { name: "Features", href: "#features" },
+    { name: "FAQ", href: "/faq" },
+    { name: "About", href: "/about" },
+    { name: "Contact", href: "/contact" },
+    { name: "Support", href: "/support" },
+    { name: "Inbox", href: "/inbox" },
+  ] : [
     { name: "Features", href: "#features" },
     { name: "FAQ", href: "/faq" },
     { name: "About", href: "/about" },
@@ -48,6 +64,12 @@ setProfileDropdownOpen(false);
             {link.name}
           </a>
         ))}
+        {isSuperAdmin && (
+          <a href="/admin" className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 rounded-lg hover:bg-red-50 transition-all duration-200 flex items-center gap-1">
+            <Settings className="w-4 h-4" />
+            Admin
+          </a>
+        )}
       </nav>
 
       {/* Auth Buttons & Profile */}
@@ -106,8 +128,18 @@ setProfileDropdownOpen(false);
                 </span>
               </div>
               <div>
-                <div className="text-sm font-medium text-gray-900">
-                  {user?.name}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-900">
+                    {user?.name}
+                  </span>
+                  {user?.role && (
+                    <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${
+                      user.role === 'superadmin' ? 'bg-red-100 text-red-700' :
+                      user.role === 'writer' ? 'bg-violet-100 text-violet-700' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {user.role === 'superadmin' ? 'Super Admin' : user.role === 'writer' ? 'Writer' : 'Viewer'}
+                    </span>
+                  )}
                 </div>
                 <div className="text-xs text-gray-500">
                   {user?.email}

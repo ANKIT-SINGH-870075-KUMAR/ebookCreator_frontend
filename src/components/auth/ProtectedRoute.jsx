@@ -2,12 +2,11 @@ import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const protectedroute = ({children}) => {
-    const { isAuthenticated, loading } = useAuth();
+const ProtectedRoute = ({children, allowedRoles}) => {
+    const { isAuthenticated, loading, user } = useAuth();
     const location = useLocation();
 
     if(loading){
-        // You can add a loading spinner here if you want
         return <div>Loading...</div>;
     }
 
@@ -15,7 +14,20 @@ const protectedroute = ({children}) => {
       return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
+    if(allowedRoles && !allowedRoles.includes(user?.role)){
+      // Redirect based on role
+      let redirectPath = '/';
+      if (user?.role === 'viewer') {
+        redirectPath = '/browse';
+      } else if (user?.role === 'superadmin') {
+        redirectPath = '/admin';
+      } else if (user?.role === 'writer') {
+        redirectPath = '/dashboard';
+      }
+      return <Navigate to={redirectPath} replace />;
+    }
+
     return children;
 }
 
-export default protectedroute
+export default ProtectedRoute

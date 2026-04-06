@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Headphones, Bug, Briefcase, ChevronRight } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Headphones, Bug, Briefcase, ChevronRight, ThumbsUp, Smile, Frown, Star } from "lucide-react";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/landing/Footer";
 import axiosInstance from "../Utils/axiosInstance";
@@ -13,6 +13,8 @@ const ContactUsPage = () => {
     email: "",
     subject: "",
     message: "",
+    rating: 0,
+    feedbackType: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -21,6 +23,10 @@ const ContactUsPage = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleRating = (rating) => {
+    setFormData({ ...formData, rating });
   };
 
   const handleSubmit = async (e) => {
@@ -35,10 +41,10 @@ const ContactUsPage = () => {
     
     try {
       const response = await axiosInstance.post(API_PATHS.CONTACT.SUBMIT, formData);
-      toast.success(response.data.message || "Message sent successfully! We'll get back to you soon.");
-      setFormData({ name: "", email: "", subject: "", message: "" });
+      toast.success(response.data.message || "Thank you for your feedback!");
+      setFormData({ name: "", email: "", subject: "", message: "", rating: 0, feedbackType: "" });
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to send message. Please try again.");
+      toast.error(error.response?.data?.message || "Failed to submit feedback. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -72,6 +78,29 @@ const ContactUsPage = () => {
       description: "Average response time",
       value: "Within 24 hours",
       available: "",
+    },
+  ];
+
+  const feedbackTypes = [
+    {
+      icon: ThumbsUp,
+      title: "Suggest a Feature",
+      description: "Have an idea to improve the platform",
+    },
+    {
+      icon: Smile,
+      title: "Share a Testimonial",
+      description: "Tell us about your positive experience",
+    },
+    {
+      icon: Frown,
+      title: "Report an Issue",
+      description: "Something didn't work as expected",
+    },
+    {
+      icon: Star,
+      title: "General Feedback",
+      description: "Any other thoughts or suggestions",
     },
   ];
 
@@ -130,13 +159,13 @@ const ContactUsPage = () => {
       <section className="relative pt-24 pb-16 lg:pt-28 lg:py-20">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl mb-8">
-            <Mail className="w-10 h-10 text-white" />
+            <MessageCircle className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-            Contact Us
+            Feedback & Support
           </h1>
           <p className="text-xl text-gray-600 leading-relaxed mb-4">
-            Have questions? We'd love to hear from you. Our team is here to help!
+            We value your input! Help us improve by sharing your thoughts, suggestions, or reporting any issues.
           </p>
         </div>
       </section>
@@ -166,37 +195,75 @@ const ContactUsPage = () => {
       <section className="py-12 pb-24">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
           <div className="grid lg:grid-cols-3 gap-12">
-            {/* Contact Form */}
+            {/* Feedback Form */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-2xl shadow-lg p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Send us a Message</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">We'd Love Your Feedback</h2>
+                <p className="text-gray-600 mb-6">Your insights help us create a better experience for everyone.</p>
                 
-                {/* Topic Selection */}
+                {/* Feedback Type Selection */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                    What can we help you with?
+                    What would you like to share?
                   </label>
                   <div className="grid sm:grid-cols-2 gap-3">
-                    {topics.map((topic, index) => (
+                    {feedbackTypes.map((type, index) => (
                       <button
                         key={index}
-                        onClick={() => setFormData({ ...formData, subject: topic.title })}
-                        className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
-                          formData.subject === topic.title
+                        onClick={() => setFormData({ ...formData, feedbackType: type.title, subject: type.title })}
+                        className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
+                          formData.feedbackType === type.title
                             ? "border-violet-500 bg-violet-50"
                             : "border-gray-200 hover:border-violet-300"
                         }`}
                       >
-                        <topic.icon className={`w-5 h-5 ${
-                          formData.subject === topic.title ? "text-violet-600" : "text-gray-500"
-                        }`} />
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                          formData.feedbackType === type.title ? "bg-violet-100" : "bg-gray-100"
+                        }`}>
+                          <type.icon className={`w-5 h-5 ${
+                            formData.feedbackType === type.title ? "text-violet-600" : "text-gray-500"
+                          }`} />
+                        </div>
                         <div>
                           <p className={`text-sm font-medium ${
-                            formData.subject === topic.title ? "text-violet-900" : "text-gray-900"
-                          }`}>{topic.title}</p>
+                            formData.feedbackType === type.title ? "text-violet-900" : "text-gray-900"
+                          }`}>{type.title}</p>
+                          <p className="text-xs text-gray-500">{type.description}</p>
                         </div>
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Rating */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    How would you rate your experience?
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => handleRating(star)}
+                        className="p-1 transition-transform hover:scale-110"
+                      >
+                        <Star 
+                          className={`w-8 h-8 ${
+                            star <= formData.rating 
+                              ? "fill-yellow-400 text-yellow-400" 
+                              : "text-gray-300"
+                          }`} 
+                        />
+                      </button>
+                    ))}
+                    {formData.rating > 0 && (
+                      <span className="ml-2 text-sm text-gray-500">
+                        {formData.rating === 5 ? "Excellent!" : 
+                         formData.rating === 4 ? "Great!" : 
+                         formData.rating === 3 ? "Good" : 
+                         formData.rating === 2 ? "Fair" : "Poor"}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -239,21 +306,21 @@ const ContactUsPage = () => {
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
-                      placeholder="Brief description of your inquiry"
+                      placeholder="Brief description of your feedback"
                       className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 outline-none transition-all"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Message *
+                      Your Feedback *
                     </label>
                     <textarea
                       name="message"
                       value={formData.message}
                       onChange={handleChange}
                       rows="5"
-                      placeholder="How can we help you today?"
+                      placeholder="Share your thoughts, suggestions, or report any issues..."
                       className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 outline-none transition-all resize-none"
                     ></textarea>
                   </div>
@@ -266,12 +333,12 @@ const ContactUsPage = () => {
                     {isSubmitting ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        <span>Sending...</span>
+                        <span>Submitting...</span>
                       </>
                     ) : (
                       <>
                         <Send className="w-5 h-5" />
-                        <span>Send Message</span>
+                        <span>Submit Feedback</span>
                       </>
                     )}
                   </button>
