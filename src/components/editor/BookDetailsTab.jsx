@@ -21,6 +21,11 @@ const BookDetailsTab = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <InputField label="Title" name="title" value={book.title} onChange={onBookChange}/>
           <InputField label="Author" name="author" value={book.author} onChange={onBookChange}/>
+          <InputField label="Category" name="category" value={book.category || ''} onChange={onBookChange} placeholder="e.g., Fiction, Non-Fiction, Technology..."/>
+          <InputField label="Series Name" name="series" value={book.series || ''} onChange={onBookChange} placeholder="If part of a series..."/>
+          {book.series && (
+            <InputField label="Series Order" name="seriesOrder" type="number" value={book.seriesOrder || ''} onChange={onBookChange} placeholder="1" min="1"/>
+          )}
           <div className="md:col-span-2">
           <InputField label="Subtitle" name="subtitle" value={book.subtitle || ''} onChange={onBookChange}/>
           </div>

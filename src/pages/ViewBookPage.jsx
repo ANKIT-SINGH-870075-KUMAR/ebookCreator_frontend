@@ -24,31 +24,39 @@ const ViewBookSkeleton = () => {
 };
 
 const ViewBookPage = () => {
-   const [book, setBook] = useState(null);
-   const [isLoading, setIsLoading] = useState(true);
-   const { bookId } = useParams();
+    const [book, setBook] = useState(null);
+    const [reviews, setReviews] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const { bookId } = useParams();
 
-   useEffect(()=>{
-    const fetchBook = async () =>{
-      try {
-        const response = await axiosInstance.get(`${API_PATHS.BOOKS.GET_BOOK_BY_ID}/${bookId}`);
-        setBook(response.data);
-      } catch (error) {
-        toast.error("Failed to fetch eBook.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    useEffect(()=>{
+     const fetchBook = async () =>{
+       try {
+         const bookRes = await axiosInstance.get(`${API_PATHS.BOOKS.GET_BOOK_BY_ID}/${bookId}`);
+         setBook(bookRes.data);
+         
+         try {
+           const reviewsRes = await axiosInstance.get(`${API_PATHS.BOOK_REVIEWS.GET_BY_BOOK}/${bookId}`);
+           setReviews(reviewsRes.data || []);
+         } catch (reviewErr) {
+           console.error("Failed to fetch reviews:", reviewErr);
+         }
+       } catch (error) {
+         toast.error("Failed to fetch eBook.");
+       } finally {
+         setIsLoading(false);
+       }
+     };
 
-    fetchBook();
-   },[bookId]);
+     fetchBook();
+    },[bookId]);
 
   return (
     <DashboardLayout>
       {isLoading ? (
         <ViewBookSkeleton/>
       ) : book ? (
-        <ViewBook book={book} />
+        <ViewBook book={book} reviews={reviews} />
       ) : (
         <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-slate-200 rounded-xl mt-8">
           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
@@ -66,4 +74,4 @@ const ViewBookPage = () => {
   )
 }
 
-export default ViewBookPage
+export default ViewBookPage;

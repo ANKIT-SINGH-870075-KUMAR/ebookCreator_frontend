@@ -1,13 +1,24 @@
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../utils/apiPaths";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Calendar } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
-const BookCard = ({book, onDelete}) => {
+const BookCard = ({book, onDelete, onSchedule}) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const canEdit = user?.role === 'writer' || user?.role === 'superadmin';
   const coverImageUrl = book.coverImage ? `${BASE_URL}/backend${book.coverImage}`.replace(/\\/g,"/") : "";
+
+  const getStatusBadge = () => {
+    if (book.status === 'published') {
+      return <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">Published</span>;
+    }
+    if (book.status === 'scheduled') {
+      return <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">Scheduled</span>;
+    }
+    return <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">Draft</span>;
+  };
+
   return (
     <div
      className="group relative bg-white rounded-xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-all duration-300 hover:shadow-xl hover:shadow-gray-100/50 hover:-translate-y-1 cursor-pointer"
@@ -17,6 +28,18 @@ const BookCard = ({book, onDelete}) => {
         <img src={coverImageUrl} alt={book.title} className="w-full aspect-[16/25] object-cover transition-transform duration-500 group-hover:scale-105" onError={(e) =>{e.target.src = ""}}/>
         {canEdit && (
           <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-2">
+            {onSchedule && book.status !== 'published' && (
+              <button
+                onClick={(e)=> {
+                  e.stopPropagation();
+                  onSchedule(book);
+                }} 
+                className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-blue-50 transition-colors cursor-pointer"
+                title={book.status === 'scheduled' ? "Cancel Schedule" : "Schedule Publication"}
+              >
+                <Calendar className={`w-4 h-4 ${book.status === 'scheduled' ? 'text-red-600' : 'text-blue-600'}`} />
+              </button>
+            )}
             <button
               onClick={(e)=> {
                 e.stopPropagation();
@@ -50,6 +73,16 @@ const BookCard = ({book, onDelete}) => {
           <p className="text-[13px] text-gray-300 font-medium">
             {book.author}
           </p>
+          {book.category && (
+            <p className="text-[11px] text-gray-400 mt-1">
+              {book.category}
+            </p>
+          )}
+          {book.series && (
+            <p className="text-[11px] text-violet-300 mt-0.5">
+              Series: {book.series} {book.seriesOrder ? `(#${book.seriesOrder})` : ''}
+            </p>
+          )}
         </div>
       </div>
 

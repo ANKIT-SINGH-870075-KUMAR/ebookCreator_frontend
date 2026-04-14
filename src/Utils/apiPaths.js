@@ -5,7 +5,7 @@ export const API_PATHS = {
         GET_PROFILE: "/api/auth/profile",
         UPDATE_PROFILE: "/api/auth/profile",
     },
-    BOOKS: {
+BOOKS: {
         CREATE_BOOK: "/api/books",
         GET_BOOKS: "/api/books",
         GET_ALL_BOOKS: "/api/books/all",
@@ -15,11 +15,14 @@ export const API_PATHS = {
         DELETE_BOOK: "/api/books",
         UPDATE_COVER: "/api/books/cover",
         TRANSFER_BOOK: "/api/books/transfer",
+        SCHEDULE_BOOK: "/api/books/schedule",
+        CANCEL_SCHEDULE: "/api/books/schedule/cancel",
     },
     AI: {
         GENERATE_OUTLINE: "/api/ai/generate-outline",
         GENERATE_CHAPTER_CONTENT: "/api/ai/generate-chapter-content",
         GENERATE_BOOK_COVER: "/api/ai/generate-book-cover",
+        TRANSLATE: "/api/ai/translate",
     },
     EXPORT: {
         PDF: "/api/export",
@@ -81,5 +84,5 @@ export const API_PATHS = {
     },
 };
 
-// export const BASE_URL ="https://ebookcreatorbackend.onrender.com" 
-export const BASE_URL ="http://localhost:8000" 
+export const BASE_URL ="https://ebookcreatorbackend.onrender.com" 
+// export const BASE_URL ="http://localhost:8000" 

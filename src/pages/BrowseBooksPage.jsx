@@ -11,7 +11,7 @@ const BrowseBooksPage = () => {
   const [books, setBooks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("published");
   const [writerFilter, setWriterFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [writers, setWriters] = useState([]);
@@ -28,24 +28,43 @@ const BrowseBooksPage = () => {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
+        console.log("Fetching from:", API_PATHS.BOOKS.GET_ALL_BOOKS);
         const response = await axiosInstance.get(API_PATHS.BOOKS.GET_ALL_BOOKS);
-        setBooks(response.data);
+        console.log("Response:", response);
+        const booksData = response.data || [];
+        console.log("Books:", booksData.length);
         
-        const uniqueWriters = response.data
-          .filter(book => book.userId?._id)
-          .reduce((acc, book) => {
-            const existing = acc.find(w => w._id === book.userId._id);
-            if (!existing) acc.push(book.userId);
+        const booksWithRatings = await Promise.all(booksData.map(async (book) => {
+          try {
+            const reviewsRes = await axiosInstance.get(`${API_PATHS.BOOK_REVIEWS.GET_BY_BOOK}/${book._id}`);
+            const reviews = reviewsRes.data || [];
+            let avgRating = 0;
+            if (reviews.length > 0) {
+              const total = reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
+              avgRating = (total / reviews.length);
+            }
+            return { ...book, averageRating: Number(avgRating.toFixed(1)), ratingCount: reviews.length };
+          } catch (err) {
+            return { ...book, averageRating: 0, ratingCount: 0 };
+          }
+        }));
+        
+        setBooks(booksWithRatings);
+        
+        const writers = booksWithRatings
+          .filter(b => b.userId?._id)
+          .reduce((acc, b) => {
+            if (!acc.find(w => w._id === b.userId._id)) acc.push(b.userId);
             return acc;
           }, []);
-        setWriters(uniqueWriters);
+        setWriters(writers);
       } catch (error) {
+        console.error("Error:", error);
         toast.error("Failed to fetch eBooks.");
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchBooks();
   }, []);
 
@@ -114,6 +133,9 @@ const BrowseBooksPage = () => {
   };
 
   const filteredBooks = books.filter((book) => {
+    const bookRating = book.averageRating || 0;
+    const bookCount = book.ratingCount || 0;
+    
     const matchesSearch = 
       searchQuery === "" ||
       book.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -206,7 +228,7 @@ const BrowseBooksPage = () => {
                 </select>
 
                 <span className="text-sm font-medium text-gray-600 ml-4">Status:</span>
-                {["all", "draft", "published"].map((status) => (
+                {["all", "published"].map((status) => (
                   <button
                     key={status}
                     onClick={() => setStatusFilter(status)}
@@ -321,16 +343,36 @@ const BrowseBooksPage = () => {
                       <p className="text-[13px] text-gray-300 font-medium">
                         {book.author}
                       </p>
+                      {book.category && (
+                        <p className="text-[11px] text-gray-400 mt-1">
+                          {book.category}
+                        </p>
+                      )}
+                      {book.series && (
+                        <p className="text-[11px] text-violet-300 mt-0.5">
+                          Series: {book.series} {book.seriesOrder ? `(#${book.seriesOrder})` : ''}
+                        </p>
+                      )}
                       {book.userId?.name && (
                         <p className="text-[11px] text-gray-400 mt-1">
                           by {book.userId.name}
                         </p>
                       )}
-                      {(book.averageRating > 0 || book.ratingCount > 0) && (
-                        <div className="flex items-center gap-1 mt-2">
-                          <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                          <span className="text-[11px] text-gray-300">
-                            {book.averageRating || '-'} ({book.ratingCount || 0})
+                      {Number(book.averageRating) > 0 && (
+                        <div className="flex items-center gap-0.5 mt-2">
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star 
+                                key={star}
+                                className={`w-3.5 h-3.5 ${star <= Math.round(Number(book.averageRating)) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`} 
+                              />
+                            ))}
+                          </div>
+                          <span className="text-[11px] text-gray-300 font-medium ml-1">
+                            {Number(book.averageRating).toFixed(1)}
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            ({book.ratingCount || 0})
                           </span>
                         </div>
                       )}

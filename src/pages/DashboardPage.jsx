@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Plus, Book, ArrowLeft } from "lucide-react";
+import { Plus, Book, ArrowLeft, Calendar, X } from "lucide-react";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import Button from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
@@ -9,6 +9,82 @@ import axiosInstance from "../utils/axiosInstance";
 import { API_PATHS, BASE_URL } from "../utils/apiPaths";
 import BookCard from "../components/cards/BookCard";
 import CreateBookModal from "../components/modals/CreateBookModal";
+
+const ScheduleModal = ({ isOpen, onClose, book, onSchedule }) => {
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("12:00");
+  const [isLoading, setIsLoading] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!scheduledDate) {
+      toast.error("Please select a date");
+      return;
+    }
+
+    const dateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+    if (dateTime <= new Date()) {
+      toast.error("Please select a future date and time");
+      return;
+    }
+
+    setIsLoading(true);
+    await onSchedule(book._id, dateTime.toISOString());
+    setIsLoading(false);
+  };
+
+  const minDate = new Date().toISOString().split('T')[0];
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen px-4 text-center">
+        <div className="fixed inset-0 bg-black/50 bg-opacity-25" onClick={onClose}></div>
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+          <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">
+            Schedule Publication
+          </h3>
+          <p className="text-slate-600 mb-6">
+            Schedule "{book?.title}" to be automatically published at the selected date and time.
+          </p>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-700 mb-2">Date</label>
+              <input
+                type="date"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                min={minDate}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-slate-700 mb-2">Time</label>
+              <input
+                type="time"
+                value={scheduledTime}
+                onChange={(e) => setScheduledTime(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex justify-end space-x-3">
+              <Button variant="secondary" type="button" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Scheduling..." : "Schedule"}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Skeleton Loader for Book Card
 const BookCardSkeleton = () => {
@@ -54,8 +130,10 @@ const DashboardPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [bookToDelete, setBookToDelete] = useState(null);
+  const [bookToCancelSchedule, setBookToCancelSchedule] = useState(null);
   const [writerData, setWriterData] = useState(null);
   const [transferRequests, setTransferRequests] = useState([]);
+  const [scheduleModalBook, setScheduleModalBook] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { writerId } = useParams();
@@ -124,7 +202,50 @@ navigate(`/editor/${bookId}`);
     }
   };
 
+  const handleScheduleBook = async (bookId, scheduledAt) => {
+    try {
+      await axiosInstance.put(`${API_PATHS.BOOKS.SCHEDULE_BOOK}/${bookId}`, { scheduledAt });
+      toast.success("Book scheduled for publication!");
+      setBooks(books.map(book => 
+        book._id === bookId 
+          ? { ...book, status: 'scheduled', scheduledAt } 
+          : book
+      ));
+      setScheduleModalBook(null);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to schedule book.");
+    }
+  };
 
+  const handleCancelSchedule = async (bookId) => {
+    try {
+      await axiosInstance.put(`${API_PATHS.BOOKS.CANCEL_SCHEDULE}/${bookId}`);
+      toast.success("Schedule cancelled successfully.");
+      setBooks(books.map(book => 
+        book._id === bookId 
+          ? { ...book, status: 'draft', scheduledAt: null } 
+          : book
+      ));
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to cancel schedule.");
+    }
+  };
+
+  const openScheduleModal = (book) => {
+    if (book.status === 'scheduled') {
+      setBookToCancelSchedule(book._id);
+    } else {
+      setScheduleModalBook(book);
+    }
+  };
+
+  const handleScheduleClick = (book) => {
+    if (book.status === 'scheduled') {
+      setBookToCancelSchedule(book._id);
+    } else {
+      setScheduleModalBook(book);
+    }
+  };
 
   return (
     <DashboardLayout showWriterView={!!writerId} writerName={writerData?.name} writerEmail={writerData?.email}>
@@ -225,6 +346,7 @@ navigate(`/editor/${bookId}`);
                 key={book._id}
                 book={book}
                 onDelete = {(user?.role === 'writer' || user?.role === 'superadmin') ? () => setBookToDelete(book._id) : undefined}
+                onSchedule = {(user?.role === 'writer' || user?.role === 'superadmin') ? () => handleScheduleClick(book) : undefined}
                 />
             ))}
           </div>
@@ -238,10 +360,28 @@ navigate(`/editor/${bookId}`);
           message="Are you sure you want to delete this eBook? This action cannot be undone."
         />
 
+        <ConfirmationModal
+          isOpen={!!bookToCancelSchedule}
+          onClose={() => setBookToCancelSchedule(null)}
+          onConfirm={() => {
+            handleCancelSchedule(bookToCancelSchedule);
+            setBookToCancelSchedule(null);
+          }}
+          title="Cancel Schedule"
+          message="Are you sure you want to cancel the scheduled publication?"
+        />
+
         <CreateBookModal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           onBookCreated={handleBookCreated}
+        />
+
+        <ScheduleModal
+          isOpen={!!scheduleModalBook}
+          onClose={() => setScheduleModalBook(null)}
+          book={scheduleModalBook}
+          onSchedule={handleScheduleBook}
         />
       </div>
     </DashboardLayout>
