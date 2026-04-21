@@ -71,33 +71,77 @@ This project aims to solve these problems by providing an AI-powered platform th
 ### 4.1 Functional Requirements
 
 #### 4.1.1 User Authentication
-- [ ] User registration with name, email, password
-- [ ] User login with JWT token generation
-- [ ] Profile management (view and update)
-- [ ] Protected routes for authenticated users
+- [x] User registration with name, email, password
+- [x] User login with JWT token generation
+- [x] Profile management (view and update)
+- [x] Protected routes for authenticated users
 
 #### 4.1.2 Book Management
-- [ ] Create new books with title and author
-- [ ] Add, edit, and delete chapters
-- [ ] Reorder chapters using drag-and-drop
-- [ ] Upload and update book cover images
-- [ ] Delete books
+- [x] Create new books with title and author
+- [x] Add, edit, and delete chapters
+- [x] Reorder chapters using drag-and-drop
+- [x] Upload and update book cover images
+- [x] Delete books
 
 #### 4.1.3 AI Features
-- [ ] Generate book outline based on topic and writing style
-- [ ] Generate chapter content using AI
-- [ ] Generate book covers using AI image generation
+- [x] Generate book outline based on topic and writing style
+- [x] Generate chapter content using AI
+- [x] Generate book covers using AI image generation
 
 #### 4.1.4 Editor Features
-- [ ] Markdown editor for chapter content
-- [ ] Chapter title and description editing
-- [ ] Book details management (title, subtitle, author)
-- [ ] Auto-save functionality
+- [x] Markdown editor for chapter content
+- [x] Chapter title and description editing
+- [x] Book details management (title, subtitle, author)
+- [x] Auto-save functionality
 
 #### 4.1.5 Export Features
-- [ ] Export book as PDF document
-- [ ] Export book as DOCX document
-- [ ] Professional formatting with cover page
+- [x] Export book as PDF document
+- [x] Export book as DOCX document
+- [x] Professional formatting with cover page
+
+#### 4.1.6 Category Management
+- [x] Create and manage book categories
+- [x] Add subcategories to categories
+- [x] Browse books by category
+- [x] Search categories by name
+
+#### 4.1.7 Subscription System
+- [x] Subscribe to writer accounts
+- [x] View my subscriptions
+- [x] View writer's subscribers
+- [x] Get subscriber count
+- [x] Cancel subscription
+- [x] List available writers
+
+#### 4.1.8 Admin Management
+- [x] View all users (superadmin only)
+- [x] Get user by ID
+- [x] Update user role
+- [x] Delete user
+
+#### 4.1.9 Transfer System
+- [x] Create transfer request (superadmin)
+- [x] View all transfer requests (superadmin)
+- [x] View my transfer requests
+- [x] Respond to transfer requests
+
+#### 4.1.10 Inbox System
+- [x] Send messages to users
+- [x] View inbox messages
+- [x] Mark messages as read/unread
+- [x] Delete messages
+- [x] Auto-notify subscribers on book release
+
+#### 4.1.11 Review System
+- [x] Create book reviews
+- [x] Get book reviews
+- [x] Calculate average ratings
+- [x] Rate books (1-5 stars)
+
+#### 4.1.12 Support System
+- [x] Submit support tickets
+- [x] View ticket status
+- [x] Contact form submissions
 
 ### 4.2 Non-Functional Requirements
 - **Performance:** Fast page load and response times
@@ -114,6 +158,7 @@ This project aims to solve these problems by providing an AI-powered platform th
 - password: String (required, hashed)
 - avatar: String (optional)
 - isPro: Boolean (default: false)
+- role: enum ['viewer', 'writer', 'superadmin'] (default: 'viewer')
 - timestamps: createdAt, updatedAt
 ```
 
@@ -124,11 +169,53 @@ This project aims to solve these problems by providing an AI-powered platform th
 - subtitle: String (optional)
 - author: String (required)
 - coverImage: String (optional)
+- category: String (optional)
+- subcategory: String (optional)
+- series: String (optional)
+- seriesOrder: Number (optional)
 - chapters: Array of Chapter objects
   - title: String (required)
   - description: String (optional)
   - content: String (optional)
-- status: enum ['draft', 'published']
+  - comments: Array of Comment objects
+    - text: String
+    - selectedText: String
+    - type: enum ['word', 'line', 'text']
+    - line: Number
+    - position: Number
+    - userId: ObjectId (ref: User)
+    - userName: String
+- status: enum ['draft', 'published', 'scheduled']
+- scheduledAt: Date (optional)
+- averageRating: Number (default: 0)
+- ratingCount: Number (default: 0)
+- timestamps: createdAt, updatedAt
+```
+
+#### Category Model
+```
+- name: String (required, unique)
+- subcategories: Array of Strings
+- timestamps: createdAt, updatedAt
+```
+
+#### Subscription Model
+```
+- viewerId: ObjectId (ref: User, required)
+- writerId: ObjectId (ref: User, required)
+- plan: enum ['free', 'monthly', 'yearly'] (default: 'free')
+- status: enum ['active', 'cancelled', 'expired'] (default: 'active')
+- startDate: Date (default: now)
+- endDate: Date (optional)
+- timestamps: createdAt, updatedAt
+```
+
+#### TransferRequest Model
+```
+- bookId: ObjectId (ref: Book, required)
+- fromUserId: ObjectId (ref: User, required)
+- toUserId: ObjectId (ref: User, required)
+- status: enum ['pending', 'accepted', 'rejected'] (default: 'pending')
 - timestamps: createdAt, updatedAt
 ```
 
@@ -145,6 +232,9 @@ This project aims to solve these problems by providing an AI-powered platform th
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
 │  │ Landing  │ │ Dashboard│ │ Editor   │ │ Profile  │      │
 │  │  Page    │ │  Page    │ │  Page    │ │  Page    │      │
+│  │          │ │          │ │          │ │          │      │
+│  │ Category │ │  Writer  │ │  Admin   │ │  Inbox   │      │
+│  │  Page    │ │  Profile │ │  Panel   │ │  Page    │      │
 │  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
 └────────────────────────┬────────────────────────────────────┘
                          │ REST API
@@ -155,14 +245,23 @@ This project aims to solve these problems by providing an AI-powered platform th
 │  │   Auth   │ │   Book   │ │    AI    │ │  Export  │      │
 │  │ Routes   │ │ Routes   │ │ Routes   │ │ Routes   │      │
 │  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │ Category │ │  Sub-    │ │  Admin   │ │ Transfer │      │
+│  │ Routes   │ │ scription│ │ Routes   │ │ Routes   │      │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
 └────────────────────────┬────────────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────────────┐
 │                     DATABASE                                │
 │                   (MongoDB)                                 │
-│  ┌──────────┐ ┌──────────┐                                │
-│  │  Users   │ │  Books   │                                │
-│  └──────────┘ └──────────┘                                │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │  Users   │ │  Books   │ │ Category │ │   Sub-   │      │
+│  │          │ │          │ │          │ │ scription│      │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐                   │
+│  │ Transfer │ │  Review  │ │  Inbox   │                   │
+│  │ Request  │ │          │ │          │                   │
+│  └──────────┘ └──────────┘ └──────────┘                   │
 └─────────────────────────────────────────────────────────────┘
 
                          │
@@ -218,21 +317,49 @@ EBOOKCREATOR/
 │   ├── config/
 │   │   └── db.js
 │   ├── controllers/
+│   │   ├── adminController.js
 │   │   ├── aiController.js
 │   │   ├── authController.js
 │   │   ├── bookController.js
-│   │   └── exportController.js
+│   │   ├── categoryController.js
+│   │   ├── exportController.js
+│   │   ├── subscriptionController.js
+│   │   ├── transferController.js
+│   │   ├── contactController.js
+│   │   ├── ticketController.js
+│   │   ├── inboxController.js
+│   │   ├── reviewController.js
+│   │   ├── bookReviewController.js
+│   │   └── chatbotController.js
 │   ├── middlewares/
 │   │   ├── authMiddleware.js
 │   │   └── uploadMiddleware.js
 │   ├── models/
 │   │   ├── Book.js
-│   │   └── User.js
+│   │   ├── Category.js
+│   │   ├── Subscription.js
+│   │   ├── TransferRequest.js
+│   │   ├── User.js
+│   │   ├── Inbox.js
+│   │   ├── Review.js
+│   │   ├── BookReview.js
+│   │   ├── Ticket.js
+│   │   └── Contact.js
 │   ├── routes/
+│   │   ├── adminRoutes.js
 │   │   ├── aiRoutes.js
 │   │   ├── authRoutes.js
 │   │   ├── bookRoutes.js
-│   │   └── exportRoutes.js
+│   │   ├── categoryRoutes.js
+│   │   ├── exportRoutes.js
+│   │   ├── subscriptionRoutes.js
+│   │   ├── transferRoutes.js
+│   │   ├── contactRoutes.js
+│   │   ├── ticketRoutes.js
+│   │   ├── inboxRoutes.js
+│   │   ├── reviewRoutes.js
+│   │   ├── bookReviewRoutes.js
+│   │   └── chatbotRoutes.js
 │   ├── uploads/
 │   ├── .env
 │   ├── package.json
@@ -370,6 +497,42 @@ Main application component with routing configuration.
 | GET | `/api/export/:id/pdf` | Export as PDF | Private |
 | GET | `/api/export/:id/doc` | Export as DOCX | Private |
 
+### Category API
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/categories` | Get all categories | Public |
+| GET | `/api/categories/search` | Search categories | Public |
+| GET | `/api/categories/by-name` | Get category by name | Public |
+| POST | `/api/categories` | Create category | Private |
+| POST | `/api/categories/:id/subcategories` | Add subcategory | Private |
+| POST | `/api/categories/with-subcategory` | Create category with subcategory | Private |
+
+### Subscription API
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/subscriptions/writers` | Get all writers | Private |
+| POST | `/api/subscriptions` | Subscribe to writer | Private |
+| GET | `/api/subscriptions/my` | Get my subscriptions | Private |
+| GET | `/api/subscriptions/subscribers/:writerId` | Get writer's subscribers | Private |
+| GET | `/api/subscriptions/subscribers/:writerId/count` | Get subscriber count | Private |
+| DELETE | `/api/subscriptions/:id` | Cancel subscription | Private |
+
+### Admin API
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/admin/users` | Get all users | Superadmin |
+| GET | `/api/admin/users/:id` | Get user by ID | Private |
+| PUT | `/api/admin/users/:id/role` | Update user role | Superadmin |
+| DELETE | `/api/admin/users/:id` | Delete user | Superadmin |
+
+### Transfer API
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/transfers` | Create transfer request | Superadmin |
+| GET | `/api/transfers/all` | Get all transfer requests | Superadmin |
+| GET | `/api/transfers/my` | Get my transfer requests | Private |
+| PUT | `/api/transfers/:id/respond` | Respond to transfer request | Private |
+
 ---
 
 ## 9. Key Features
@@ -400,6 +563,29 @@ Main application component with routing configuration.
 - Drag-and-drop chapter reordering
 - Auto-save capability
 - Book details management
+
+### 9.6 Category Management
+- Browse books by category and subcategory
+- Search categories by name
+- Create custom categories
+- Add subcategories to categories
+
+### 9.7 Subscription System
+- Subscribe to favorite writers
+- View writer profiles and subscriber counts
+- Manage personal subscriptions
+- Writer discovery
+
+### 9.8 Admin Management
+- User role management (viewer, writer, superadmin)
+- View all users
+- Update user roles
+- Delete users
+
+### 9.9 Transfer System
+- Create earnings transfer requests
+- View transfer request history
+- Respond to transfer requests (approve/reject)
 
 ---
 
@@ -445,10 +631,10 @@ The eBook Creator project demonstrates the effective integration of AI technolog
 - **Offline Capability:** Requires internet connection for AI features
 
 ### 11.2 Feature Limitations
-- No collaboration features for multiple authors
 - Limited template options for book designs
 - No built-in publishing/distribution features
 - No analytics for book performance
+- Direct payment integration not available
 
 ### 11.3 AI Limitations
 - Generated content may require human editing
@@ -511,7 +697,6 @@ STABILITY_API_KEY=your_stability_api_key
 - `cors` - CORS middleware
 - `dotenv` - Environment variables
 - `multer` - File uploads
-- `@google/genai` - Gemini AI
 - `@google/generative-ai` - Gemini AI
 - `pdfkit` - PDF generation
 - `docx` - Word document generation
