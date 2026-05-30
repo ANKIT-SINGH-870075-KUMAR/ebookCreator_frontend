@@ -23,6 +23,7 @@ import AdminPage from './pages/AdminPage';
 import WritersPage from './pages/WritersPage';
 import InboxPage from './pages/InboxPage';
 import WriterProfilePage from './pages/WriterProfilePage';
+import Chatbot from './components/chatbot/Chatbot';
 
 const App = () => {
   useEffect(() => {
@@ -34,7 +35,7 @@ const App = () => {
 
   return (
     <div>
-      <Routes>
+        <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
@@ -61,6 +62,7 @@ const App = () => {
         <Route path="/admin/tickets/:ticketId" element={<ProtectedRoute allowedRoles={['superadmin']}><TicketDetailPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminPage /></ProtectedRoute>} />
       </Routes>
+      <Chatbot />
     </div>
   )
 }

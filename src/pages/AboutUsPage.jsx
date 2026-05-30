@@ -20,27 +20,27 @@ const AboutUsPage = () => {
 
   const team = [
     {
-      name: "Alex Johnson",
-      role: "Founder & CEO",
-      bio: "Former publishing executive with 15 years in the digital content industry.",
+      name: "Amit Kumar Jha",
+      role: "Project Manager & DevOps Manager",
+      bio: "Leads project strategy and DevOps operations to ensure smooth deployment and delivery.",
       image: null,
     },
     {
-      name: "Sarah Chen",
-      role: "Head of AI",
-      bio: "AI researcher specializing in natural language processing and content generation.",
+      name: "Ankit Kumar Singh",
+      role: "Backend Developer and Tester",
+      bio: "Specializing in server-side development and quality assurance testing.",
       image: null,
     },
     {
-      name: "Michael Roberts",
-      role: "Lead Developer",
-      bio: "Full-stack developer with expertise in modern web technologies.",
+      name: "Ankit Kumar",
+      role: "Frontend Developer",
+      bio: "Focused on creating responsive and user-friendly interfaces.",
       image: null,
     },
     {
-      name: "Emily Davis",
-      role: "UX Director",
-      bio: "Award-winning designer focused on creating intuitive user experiences.",
+      name: "Harsh Kumar Thakur",
+      role: "Frontend Developer",
+      bio: "Dedicated to building intuitive and engaging user experiences.",
       image: null,
     },
   ];

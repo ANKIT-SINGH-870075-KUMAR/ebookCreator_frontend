@@ -13,8 +13,11 @@ const BrowseBooksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("published");
   const [writerFilter, setWriterFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [subcategoryFilter, setSubcategoryFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [writers, setWriters] = useState([]);
+  const [categories, setCategories] = useState([]);
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -58,6 +61,13 @@ const BrowseBooksPage = () => {
             return acc;
           }, []);
         setWriters(writers);
+
+        try {
+          const categoriesRes = await axiosInstance.get(API_PATHS.CATEGORIES.GET_ALL);
+          setCategories(categoriesRes.data || []);
+        } catch (err) {
+          console.error("Failed to fetch categories:", err);
+        }
       } catch (error) {
         console.error("Error:", error);
         toast.error("Failed to fetch eBooks.");
@@ -140,22 +150,38 @@ const BrowseBooksPage = () => {
       searchQuery === "" ||
       book.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       book.author?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      book.userId?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+      book.userId?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      book.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      book.subcategory?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || book.status === statusFilter;
     
     const matchesWriter = writerFilter === "all" || book.userId?._id === writerFilter;
     
-    return matchesSearch && matchesStatus && matchesWriter;
+    const matchesCategory = categoryFilter === "all" || book.category === categoryFilter;
+    
+    const matchesSubcategory = subcategoryFilter === "all" || book.subcategory === subcategoryFilter;
+    
+    return matchesSearch && matchesStatus && matchesWriter && matchesCategory && matchesSubcategory;
   });
 
   const clearFilters = () => {
     setSearchQuery("");
     setStatusFilter("all");
     setWriterFilter("all");
+    setCategoryFilter("all");
+    setSubcategoryFilter("all");
   };
 
-  const hasActiveFilters = searchQuery !== "" || statusFilter !== "all" || writerFilter !== "all";
+  const hasActiveFilters = searchQuery !== "" || statusFilter !== "all" || writerFilter !== "all" || categoryFilter !== "all" || subcategoryFilter !== "all";
+
+  const currentCategory = categories.find(cat => cat.name === categoryFilter);
+  const availableSubcategories = currentCategory?.subcategories || [];
+
+  const handleCategoryChange = (value) => {
+    setCategoryFilter(value);
+    setSubcategoryFilter("all");
+  };
 
   return (
     <DashboardLayout>
@@ -203,7 +229,7 @@ const BrowseBooksPage = () => {
               Filters
               {hasActiveFilters && (
                 <span className="w-5 h-5 bg-violet-600 text-white text-xs rounded-full flex items-center justify-center">
-                  {(searchQuery ? 1 : 0) + (statusFilter !== "all" ? 1 : 0) + (writerFilter !== "all" ? 1 : 0)}
+                  {(searchQuery ? 1 : 0) + (statusFilter !== "all" ? 1 : 0) + (writerFilter !== "all" ? 1 : 0) + (categoryFilter !== "all" ? 1 : 0) + (subcategoryFilter !== "all" ? 1 : 0)}
                 </span>
               )}
             </button>
@@ -226,6 +252,38 @@ const BrowseBooksPage = () => {
                     </option>
                   ))}
                 </select>
+
+                <span className="text-sm font-medium text-gray-600 ml-4">Category:</span>
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 outline-none"
+                >
+                  <option value="all">All Categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+
+                {categoryFilter !== "all" && availableSubcategories.length > 0 && (
+                  <>
+                    <span className="text-sm font-medium text-gray-600 ml-4">Subcategory:</span>
+                    <select
+                      value={subcategoryFilter}
+                      onChange={(e) => setSubcategoryFilter(e.target.value)}
+                      className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 outline-none"
+                    >
+                      <option value="all">All Subcategories</option>
+                      {availableSubcategories.map((sub, index) => (
+                        <option key={index} value={sub}>
+                          {sub}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                )}
 
                 <span className="text-sm font-medium text-gray-600 ml-4">Status:</span>
                 {["all", "published"].map((status) => (

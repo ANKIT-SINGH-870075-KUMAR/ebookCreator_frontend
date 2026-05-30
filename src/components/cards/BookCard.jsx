@@ -75,7 +75,7 @@ const BookCard = ({book, onDelete, onSchedule}) => {
           </p>
           {book.category && (
             <p className="text-[11px] text-gray-400 mt-1">
-              {book.category}
+              {book.category}{book.subcategory ? ` > ${book.subcategory}` : ''}
             </p>
           )}
           {book.series && (

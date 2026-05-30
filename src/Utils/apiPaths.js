@@ -82,6 +82,22 @@ BOOKS: {
         GET_MY: "/api/book-reviews/book",
         DELETE: "/api/book-reviews",
     },
+    CHATBOT: {
+        MESSAGE: "/api/chatbot/message",
+        CAPABILITIES: "/api/chatbot/capabilities",
+        RECOMMEND: "/api/chatbot/recommend",
+        MEANING: "/api/chatbot/meaning",
+        QUIZ: "/api/chatbot/quiz",
+        TOP_WRITERS: "/api/chatbot/top-writers",
+        CATEGORIES: "/api/chatbot/categories",
+    },
+    CATEGORIES: {
+        GET_ALL: "/api/categories",
+        SEARCH: "/api/categories/search",
+        CREATE: "/api/categories",
+        CREATE_WITH_SUBCATEGORY: "/api/categories/with-subcategory",
+        ADD_SUBCATEGORY: (id) => `/api/categories/${id}/subcategories`,
+    },
 };
 
 export const BASE_URL ="https://ebookcreatorbackend.onrender.com" 
